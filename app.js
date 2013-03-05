@@ -1,7 +1,13 @@
 var app = require('express').createServer()
 var io = require('socket.io').listen(app);
 
-app.listen(8080);
+	io.configure(function () { 
+  		io.set("transports", ["xhr-polling"]); 
+  		io.set("polling duration", 10); 
+	});
+
+
+app.listen();
 
 // routing
 app.get('/', function (req, res) {
