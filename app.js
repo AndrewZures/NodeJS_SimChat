@@ -1,3 +1,4 @@
+var port=process.env.PORT || 3000;
 var app = require('express').createServer()
 var io = require('socket.io').listen(app);
 
@@ -7,7 +8,7 @@ var io = require('socket.io').listen(app);
 	});
 
 
-app.listen();
+app.listen(port);
 
 // routing
 app.get('/', function (req, res) {
