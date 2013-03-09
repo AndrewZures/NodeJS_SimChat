@@ -17,6 +17,7 @@ app.get('/', function (req, res) {
 
 // usernames which are currently connected to the chat
 var usernames = {};
+var usersockets= {};
 
 io.sockets.on('connection', function (socket) {
 
@@ -32,6 +33,8 @@ io.sockets.on('connection', function (socket) {
 		socket.username = username;
 		// add the client's username to the global list
 		usernames[username] = username;
+		// add socket to usersockets
+		usersockets[socket.username] = socket;
 		// echo to client they've connected
 		socket.emit('updatechat', 'SERVER', 'you have connected');
 		// echo globally (all clients) that a person has connected
@@ -48,5 +51,13 @@ io.sockets.on('connection', function (socket) {
 		io.sockets.emit('updateusers', usernames);
 		// echo globally that this client has left
 		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has disconnected');
+	});
+
+	socket.on('sendprivatechat', function(key, msg) {
+		var clientSocket = usersockets[key];
+		if (clientSocket == null){
+		} else {
+			clientSocket.emit('getprivatemsg', socket.username, key, "<b>"+socket.username+"</b>"+msg);
+		}
 	});
 });

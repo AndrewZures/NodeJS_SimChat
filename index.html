@@ -18,9 +18,62 @@
 	socket.on('updateusers', function(data) {
 		$('#users').empty();
 		$.each(data, function(key, value) {
-			$('#users').append('<div>' + key + '</div>');
+			//add anchor tag to allow to select user based on user name
+			$('#users').append('<div><a id=' + key + ' href="#">' + key + '</a></div>');
+
+			document.getElementById(key).onclick = function(){private_talk(key)};
 		});
 	});
+
+	//create onclick action for each username link
+	
+//formatting the text boxes when they're created
+function private_talk(key)
+    {
+  var wId= "to_"+key;
+         var privateDiv = document.getElementById('PrivateTab');
+               var privateBox = document.createElement('div');
+  
+  var privateTitle = document.createElement('div');
+  $(privateTitle).attr({
+   'style': 'background-color: #000; color: white;',
+  });
+  $(privateTitle).append("Private: "+ key);
+  privateBox.appendChild(privateTitle);
+  
+  var privateChat = document.createElement('div');
+  $(privateChat).attr({
+   'id': wId + "_text"
+  });
+  privateBox.appendChild(privateChat);
+  
+  var privateBreak = document.createElement('br');
+  privateBox.appendChild(privateBreak);
+  
+  var privateText = document.createElement('input');
+  $(privateText).attr({
+   'id': wId + "_data",
+   'type': "text"
+  });
+  privateBox.appendChild(privateText);
+  
+  var privateSend = document.createElement('input');
+  $(privateSend).attr({
+   'id': wId + "_send",
+   'type': "button",
+   'value': "Send"
+  });
+  privateBox.appendChild(privateSend);
+  
+  $(privateBox).attr({
+   'id': wId,
+   'style': 'float: right; width: 220px; height: 200px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid;'
+  });
+               privateDiv.appendChild(privateBox);
+  
+  $(privateSend).click(function(){
+   private_send(key);});
+    }
 
 	// on load of page
 	$(function(){
@@ -41,6 +94,24 @@
 		});
 	});
 
+	function private_send(key){
+		var messagetosend = $('#to_'+key+'_data').val();
+		$('#to_'+key+'_test').append("<div><b>Me: </b>" + messagetosend + "</div>");
+		socket.emit('sendprivatechat', key, messagetosend);
+	}
+
+
+socket.on('getprivatemsg', function(sender, key, message) {
+  var elem = document.getElementById('to_'+sender+"_text");
+  if(typeof(elem) != 'undefined' && elem != null){
+   
+  }else{
+   private_talk(sender);
+  }
+  var elem = document.getElementById('to_'+sender+"_text");
+  $(elem).append('<div>' + message + '</div>');
+    });
+
 </script>
 <div style="float:left;width:100px;border-right:1px solid black;height:300px;padding:10px;overflow:scroll-y;">
 	<b>USERS</b>
@@ -51,3 +122,4 @@
 	<input id="data" style="width:200px;" />
 	<input type="button" id="datasend" value="send" />
 </div>
+<div id="PrivateTab"> </div></body>
