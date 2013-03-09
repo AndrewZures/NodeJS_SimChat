@@ -1,19 +1,13 @@
-//declare port number based on environment necessary for heroku deployment
-var port = process.env.PORT || 3000;
-
-//create express application
+var port= process.env.PORT || 3000;
 var app = require('express').createServer()
-
-//require socket.io
 var io = require('socket.io').listen(app);
 
-//socket configuration for Heroku.  Defined by Heroku itself
-io.configure(function () { 
-  	io.set("transports", ["xhr-polling"]); 
-  	io.set("polling duration", 10); 
-});
+	io.configure(function () { 
+  		io.set("transports", ["xhr-polling"]); 
+  		io.set("polling duration", 10); 
+	});
 
-//app will listen on port specified above
+
 app.listen(port);
 
 // routing
@@ -24,29 +18,19 @@ app.get('/', function (req, res) {
 // usernames which are currently connected to the chat
 var usernames = {};
 var usersockets= {};
+var openConnections = new Object();
 
-//on receiving socket "connection, anonymous function called"
 io.sockets.on('connection', function (socket) {
+
+	socket.on('getusernames',function() {
+		return usernames;
+	})
 
 	// when the client emits 'sendchat', this listens and executes
 	socket.on('sendchat', function (data) {
 		// we tell the client to execute 'updatechat' with 2 parameters
-		//first parameter is the socket emiiting, second is the data itself
-		io.sockets.emit('updatechat', socket.username, data);
+		io.sockets.emit('updatechat', username, data);
 
-	});
-
-	socket.on('getusername', function(){
-		socket.emit('sendusername', socket.username);
-	});
-
-	socket.on('privatechat', function (data, RSname) {
-		Receiver = usersockets[RSname];
-		if (Receiver != null){
-			recName = Receiver.username;
-			Receiver.emit('myprivatechat', socket.username, recName, data);
-			socket.emit('myprivatechat', socket.username, 'You', data);
-		}
 	});
 
 	// when the client emits 'adduser', this listens and executes
@@ -58,14 +42,10 @@ io.sockets.on('connection', function (socket) {
 		// add socket to usersockets
 		usersockets[socket.username] = socket;
 		// echo to client they've connected
-		// just emitting to "local" socket
 		socket.emit('updatechat', 'SERVER', 'you have connected');
 		// echo globally (all clients) that a person has connected
-		//emitting to everything but local socket
-		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has connected');
+		socket.broadcast.emit('updatechat', 'SERVER', username + ' has connected');
 		// update the list of users in chat, client-side
-		socket.emit('updatename', socket.username);
-		//update all
 		io.sockets.emit('updateusers', usernames);
 	});
 
@@ -81,6 +61,28 @@ io.sockets.on('connection', function (socket) {
 
 	// when 'sendprivatechat' is emitted, this will pick it
 	socket.on('sendprivatechat', function(receiverId, senderId, msg) {
+		
+		//find correct client socket (receiver's socket)
+		var clientSocket = usersockets[receiverId];		
+		
+		//check to see if receiver is present
+		if (clientSocket == null){
+			//send "could not connect message"
+			return;
+		} 
+
+		//if client is present, check to see if there is already a "connection"
+		if (openConnections[receiverId+senderId] != null) {
+			Console.log("r: "+receiverId+"  s: "+senderId+"  m: "+msg);
+		}
+		else if (openConnections[senderId+receiverId] != null) {
+				Console.log("s: "+senderId+"  r: "+receiverId+"  m: "+msg);
+		}
+		else {
+			//if no connection, create a connection
+			openConnections[senderId+receiverId] = "hello";
+			Console.log("Creating Connection");
+		}
 		//if socket does exist, emit to clientsocket, getprivatemessage command
 		clientSocket.emit('getprivatemsg', socket.username, receiverId, "<b>"+socket.username+"</b>"+msg);
 	});
