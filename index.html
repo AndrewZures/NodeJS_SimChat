@@ -4,6 +4,7 @@
 	var socket = io.connect();
   var socketname;
   var receiver;
+  var boxes = {};
 	// on connection to server, ask for user's name with an anonymous callback
 	socket.on('connect', function(){
 		//anonymous callback, emit add upser, using prompt results as argument
@@ -42,6 +43,18 @@
   function updateTarget (target) {
     receiver = target;
     $('#target').text(receiver);
+
+    if (boxes[target] == null && target != socketname){
+      boxes[target] = target;
+      var privDiv = document.getElementById(PrivateTab);
+      var privBox = document.createElement('div');
+      $(privBox).attr({
+          'id': target,
+          'style': 'float: right; width: 220px; height: 200px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid;'
+        });
+      PrivateTab.appendChild(privBox);
+    }
+
   }
 
 
@@ -140,4 +153,4 @@ socket.on('getprivatemsg', function(sender, key, message) {
   <input id="privatedata" style="width:200px;" />
   <input type="button" id="privatesend" value="send" />
 </div>
-<div id="PrivateTab"> </div></body>
+<div id="PrivateTab" style="position: absolute; right: 0; bottom: 0"> </div></body>
