@@ -7,6 +7,8 @@
   var socketname;
   var receiver;
   var boxes = {};
+
+
 	// on connection to server, ask for user's name with an anonymous callback
 	socket.on('connect', function(){
 		//anonymous callback, emit add upser, using prompt results as argument
@@ -21,7 +23,7 @@
 
   socket.on('myprivatechat', function (sendername, target, data) {
           if (boxes[sendername] == null && sendername != socketname) {
-            boxes[sendername] = sendername;
+            //boxes[sendername] = sendername;
             createBox(sendername);
           }
           var elem = document.getElementById('priv_'+sendername);
@@ -50,18 +52,17 @@
 	});
 
   function updateTarget (target) {
-    receiver = target;
+    receiver = target;  //updating ui with information
     $('#target').text(receiver);
 
-    if (boxes[target] == null && target != socketname){
-      boxes[target] = target;
+    if (boxes[target] != target && target != socketname){
       createBox(target);
     }
   }
 
     function createBox(target) {
       //createChatBox();
-
+      boxes[target] = target;
       var privDiv = document.getElementById(PrivateTab);
       var privBox = document.createElement('div');
       var privTitle = document.createElement('div');
@@ -92,7 +93,7 @@
       $(exitbutton).attr({
           'id': 'exit_' + target,
           'style': 'background-color: RED; height: 30px; width: 30px; top: 0; right: 0; float: right;',
-          'onclick' : 'closeChatBox(privBox_' + target+');'
+          'onclick' : 'closeChatBox('+target+', privBox_'+target+');'
         });
 
       $(privChatBox).attr({
@@ -146,8 +147,14 @@
       $('#priv' + target + 'send').focus();
   }  //closing create box function
 
-  function closeChatBox(boxID) {
-      $(boxID).remove();
+  function closeChatBox(target, boxID) {
+      if (boxes[target.id] == null) {
+      }
+      else {
+        delete boxes[target.id];
+        $(boxID).remove();
+      }
+      
   };
 
 
