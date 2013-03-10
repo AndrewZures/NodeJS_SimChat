@@ -66,6 +66,7 @@
       var privBox = document.createElement('div');
       var privTitle = document.createElement('div');
       var titleText = document.createElement('div');
+      var exitbutton = document.createElement('button');
       var privChatBox = document.createElement('div');
       var privSend = document.createElement('input');
       
@@ -73,19 +74,25 @@
       /*      PRIVATE CHAT BOX FORMATTING */
 
       $(privBox).attr({
-          'id': privBox,
-          'style': 'float: right; width: 220px; height: 300px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid;'
+          'id': 'privBox_' + target,
+          'style': 'float: right; width: 224px; height: 300px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid;'
         });
 
       $(privTitle).attr({
           'id': target + '_title',
-          'style': 'width: 220px; height: 30px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid; background-color : BLUE'
+          'style': 'width: 220px; height: 30px; border-radius: 6px; border: 1px #BBB solid; background-color : BLUE'
         });
 
       $(titleText).attr({
-          'id': titleText,
-          'style': 'color: WHITE; height: 30px;'
+          'id': 'tite_text_'+target,
+          'style': 'color: WHITE; height: 30px; width: 120; float: left;'
 
+        });
+
+      $(exitbutton).attr({
+          'id': 'exit_' + target,
+          'style': 'background-color: RED; height: 30px; width: 30px; top: 0; right: 0; float: right;',
+          'onclick' : 'closeChatBox(privBox_' + target+');'
         });
 
       $(privChatBox).attr({
@@ -103,7 +110,6 @@
 
       /************* END PRIVATE CHAT BOX FORMATTING ****************/
 
-
       $(titleText).append(target);  // add target user to chat box title
 
        
@@ -113,6 +119,7 @@
       PrivateTab.appendChild(privBox);
       privBox.appendChild(privTitle);
       privTitle.appendChild(titleText);
+      privTitle.appendChild(exitbutton);
       privBox.appendChild(privChatBox);
       privBox.appendChild(privSend);
 
@@ -130,12 +137,18 @@
             $('#priv' + target + 'send').val('');
           // tell server to execute 'sendchat' and send along one parameter
           socket.emit('privatechat', message, target);
+            $('#priv_'+target).scrollTop(100000);
+            $('#priv' + target + 'send').focus();
           }  //closing if statement
         });
       }); //closing onclick function
 
-
+      $('#priv' + target + 'send').focus();
   }  //closing create box function
+
+  function closeChatBox(boxID) {
+      $(boxID).remove();
+  };
 
 
    socket.on('sendusername', function(username) {
