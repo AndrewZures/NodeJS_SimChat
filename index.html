@@ -107,34 +107,6 @@
 
 
 
-  function private_send(receiverId){
-    var messagetosend = $('#to_'+receiverId+'_data').val();
-    $('#to_'+receiverId+'_test').append("<div><b>Me: </b>   " + messagetosend + "</div>");
-    socket.emit('sendprivatechat', receiverId, senderId, messagetosend);
-  }
-
-// when 'getprivatemsg' command is emitted to a socket
-// will "catch" the private message sent
-socket.on('getprivatemsg', function(sender, key, message) {
-    var elem = document.getElementById('to_'+sender+"_text");
-
-    //check to see if private chat window already exists
-    // if window exists, do nothing, if not, create window
-    if(typeof(elem) != 'undefined' && elem != null){
-      //do nothing if private chat window already created
-    }
-    else{
-      //create private chat window if needed
-      private_talk(sender);
-    }
-
-    var elem = document.getElementById('to_'+sender+"_text");
-    $(elem).append('<div>' + message + '</div>');
-
-    });
-
-
-
 </script>
 <div style="float:left;width:120px;border-right:1px solid black; border-bottomw:1px solid black; height:300px;padding:10px;overflow:scroll-y;">
 	<div style="width:120px;border-bottom:1px solid black;"> <b>USERS</b></div><br>

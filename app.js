@@ -79,9 +79,4 @@ io.sockets.on('connection', function (socket) {
 		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has disconnected');
 	});
 
-	// when 'sendprivatechat' is emitted, this will pick it
-	socket.on('sendprivatechat', function(receiverId, senderId, msg) {
-		//if socket does exist, emit to clientsocket, getprivatemessage command
-		clientSocket.emit('getprivatemsg', socket.username, receiverId, "<b>"+socket.username+"</b>"+msg);
-	});
 });
