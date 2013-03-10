@@ -36,16 +36,18 @@ io.sockets.on('connection', function (socket) {
 
 	});
 
+	//socketname getter
 	socket.on('getusername', function(){
 		socket.emit('sendusername', socket.username);
 	});
 
+	
 	socket.on('privatechat', function (data, RSname) {
 		Receiver = usersockets[RSname];
 		if (Receiver != null){
 			recName = Receiver.username;
 			Receiver.emit('myprivatechat', socket.username, recName, data);
-			socket.emit('myprivatechat', socket.username, 'You', data);
+			//socket.emit('myprivatechat', socket.username, 'You', data);
 		}
 	});
 
