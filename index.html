@@ -1,67 +1,107 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
-<script src="style.js" type="text/javascript"></script>
 
 <script>
-	var socket = io.connect();
-  var socketname;
+  //creates socket variable that will be called to interact with server
+	var socket = io.connect();  
+  var socketname; //hold's this socket's username
   var receiver;
   var boxes = {};
 
 
-	// on connection to server, ask for user's name with an anonymous callback
+	// on connection function
+  //will run when a user first connects to web app
 	socket.on('connect', function(){
-		//anonymous callback, emit add upser, using prompt results as argument
+
+    //emit the adduser command to server, updating available users
 		socket.emit('adduser', prompt("What's your name?"));
+
+    //get username and confirm user is connected 
     socket.emit('getusername');
 	});
 
-	// listener, whenever the server emits 'updatechat', this updates the chat body
-	socket.on('updatechat', function (username, data) {
-		$('#conversation').append('<b>'+ username + ':</b> ' + data + '<br>');
-	});
-
-  socket.on('myprivatechat', function (sendername, target, data) {
-          if (boxes[sendername] == null && sendername != socketname) {
-            //boxes[sendername] = sendername;
-            createBox(sendername);
-          }
-          var elem = document.getElementById('priv_'+sendername);
-          if(target == 'You') {
-             $('#privateconversation').append('<b>Me:</b> ' + data + '<br>');
-             $(elem).append('<b>Me:</b> ' + data + '<br>');
-          }
-          else {
-            $('#privateconversation').append('<b>'+ sendername +':</b> ' + data + '<br>');
-            $(elem).append('<b>'+ sendername +':</b> '  + data + '<br>');
-          }
+  //receives this socket's username from server
+  socket.on('sendusername', function(username) {
+       socketname = username;
+       $('#myname').append(socketname + '<br>');
 
   });
 
+  //updates the group chat conversation for this socket
+  //two arguments, username of author and chat payload
+	socket.on('updategroupchat', function (username, chat) {
 
+    /*if the broadcast emission comes from this socket, replace the username with
+     'Me' to clarify that it is this user's chat*/
+    if (username == socketname){
+      username = 'Me';
+    }
+    //append group conversation with new chat
+		$('#groupconversation').append('<b>'+ username + ':</b> ' + chat + '<br>');
+	});
+
+  //update the server chat logs
+  socket.on('updateserverchat', function (username, update) {
+
+    //append server conversation with new update
+    $('#serverconversation').append('<b>'+ username + ':</b> ' + update + '<br>');
+  });
+
+
+  //updates private chate between sender and target
+  socket.on('myprivatechat', function (sender, target, data) {
+
+          /*if private chat box between sender and target does not already exist
+            create a new box*/
+          if (boxes[sender] == null && sender != socketname) {
+
+            //create box is javascript that will render the box onscreen
+            createBox(sender);
+          }
+
+          //find private box
+          var elem = document.getElementById('priv_'+sender);
+          $(elem).append('<b>'+ sender +':</b> '  + data + '<br>');
+
+  });
 
 	// listener, whenever the server emits 'updateusers', this updates the username list
 	socket.on('updateusers', function(data) {
+
+    //empty the current list
 		$('#users').empty();
+
+    //iterate throgh new list sent by server
 		$.each(data, function(key, value) {
-			//add anchor tag to allow to select user based on user name
-			$('#users').append('<div><a id=' + key +' href=# >' + key + '</a></div>');
 
-      document.getElementById(key).onclick = function(){updateTarget(key)};			
-		});
-	});
+      /*append each new name to the list and create anchor tag so that user knows
+        the list is clickable */
+			     $('#users').append('<div><a id=' + key +' href=# >' + key + '</a></div>');
 
-  function updateTarget (target) {
-    receiver = target;  //updating ui with information
-    $('#target').text(receiver);
+           //onclick element will create client-side chat box if needed
+            document.getElementById(key).onclick = function(){openPrivateChat(key)};
 
+		});  //close .each method
+
+	}); //close update user function
+
+
+  function openPrivateChat (target) {
+
+    /*upon clicking available users create a private chat box if one 
+      does not already exist.  A chat box will be created even if no
+      chat is actually sent  */
     if (boxes[target] != target && target != socketname){
+
+      //create the actual box
       createBox(target);
     }
   }
 
+    //front end JavaScript that creates a private chat box
     function createBox(target) {
-      //createChatBox();
+
+      //create box variables necessary for private chat box
       boxes[target] = target;
       var privDiv = document.getElementById(PrivateTab);
       var privBox = document.createElement('div');
@@ -111,11 +151,12 @@
 
       /************* END PRIVATE CHAT BOX FORMATTING ****************/
 
-      $(titleText).append(target);  // add target user to chat box title
 
-       
+      //put target's username as title of private chat box
+      $(titleText).append(target); 
 
-
+      
+      //add individual elements to each other to create chat box
       
       PrivateTab.appendChild(privBox);
       privBox.appendChild(privTitle);
@@ -124,12 +165,10 @@
       privBox.appendChild(privChatBox);
       privBox.appendChild(privSend);
 
-       //$('#priv_'+target).append('Hello');
-
+      //start function for managing chats within the private box
       $(function(){
-        // when the client clicks SEND
 
-        // when the client hits ENTER on their keyboard
+        // when the client hits ENTER in a private chat box on their keyboard
         $('#priv' + target + 'send').keypress(function(e) {
           if(e.which == 13) {
             $(this).blur();
@@ -147,82 +186,59 @@
       $('#priv' + target + 'send').focus();
   }  //closing create box function
 
+  //front-end JavaSCript - closes a chat box
   function closeChatBox(target, boxID) {
-      if (boxes[target.id] == null) {
-      }
-      else {
+      //find chatbox and delete it from the client view
         delete boxes[target.id];
         $(boxID).remove();
-      }
       
   };
-
-
-   socket.on('sendusername', function(username) {
-       socketname = username;
-       $('#myname').append(socketname + '<br>');
-
-  });
-
-	//create onclick action for each username link
 	
-  // on load of page
+  //group chat input functionality
   $(function(){
-    // when the client clicks SEND
-    $('#datasend').click( function() {
+
+    // when the client hits enter with focus on group input
+    $('#data').keypress(function(e) {
+
+      if(e.which == 13) {
+      $(this).blur();
+
+      //take in message as variable
       var message = $('#data').val();
+
+      //clear current input field
       $('#data').val('');
+
       // tell server to execute 'sendchat' and send along one parameter
       socket.emit('sendchat', message);
-    });
 
-    // when the client hits ENTER on their keyboard
-    $('#data').keypress(function(e) {
-      if(e.which == 13) {
-        $(this).blur();
-        $('#datasend').focus().click();
+      //refocus on input field for ease of use
+      $('#data').focus();
       }
     });
   });
-
-
-    $(function(){
-    // when the client clicks SEND
-    $('#privatesend').click( function() {
-      var message = $('#privatedata').val();
-      $('#privatedata').val('');
-      // tell server to execute 'sendchat' and send along one parameter
-      socket.emit('privatechat', message, receiver);
-    });
-
-    // when the client hits ENTER on their keyboard
-    $('#privatedata').keypress(function(e) {
-      if(e.which == 13) {
-        $(this).blur();
-        $('#privatesend').focus().click();
-      }
-    });
-  });
-
-
-
 
 </script>
+
+<!-- User List Box -->
 <div style="float:left;width:120px;border-right:1px solid black; border-bottomw:1px solid black; height:300px;padding:10px;overflow:scroll-y;">
 	<div style="width:120px;border-bottom:1px solid black;"> <b>USERS</b></div><br>
-  <div id="myname" style="width:120px;border-bottom:1px solid black;"> Me: </div><br>
-  <div id="target" style="width:120px;border-bottom:1px solid black;"> Me: </div><br>
+  <div id="myname" style="width:120px;border-bottom:1px solid black;"><b> Me: </b></div><br>
 	<div id="users"></div>
 </div>
+
+<!-- Group Conversation Box -->
 <div style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;border-right:1px solid black;height:300px;">
-	<div id="conversation"></div>
+  <h3>Group Chat</h3> 
+	<div id="groupconversation"></div>
 	<input id="data" style="width:200px;" />
-	<input type="button" id="datasend" value="send" />
 </div>
 
-<div style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;">
-  <div id="privateconversation"></div>
-  <input id="privatedata" style="width:200px;" />
-  <input type="button" id="privatesend" value="send" />
+<!-- Server update box -->
+<div style="float:left;width:300px;height:250px;overflow:scroll-y;padding:10px;border-right:1px solid black;height:300px;">
+  <h3>Server Info</h3> 
+  <div id="serverconversation"></div>
 </div>
+
+<!-- private tab anchor -->
 <div id="PrivateTab" style="position: absolute; right: 0; bottom: 0"> </div></body>
