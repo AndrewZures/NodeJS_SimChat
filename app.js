@@ -50,7 +50,7 @@ io.sockets.on('connection', function (socket) {
 		if (targetSocket != null){
 
 			//if user socket exists, get the socket's username
-			confirmedTarget = TargetSocket.username;
+			confirmedTarget = targetSocket.username;
 
 			//emit chat to target socket with sender's name, target's name, and data
 			targetSocket.emit('myprivatechat', socket.username, confirmedTarget, data);
