@@ -145,7 +145,7 @@
       $(privSend).attr({
           'id': 'priv' + target + 'send',
           'type' : 'input',
-          'style': 'width: 220px; height: 30px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid; position : absolute; bottom : 0; left: 0'
+          'style': 'width: 220px; height: 30px; overflow-x: auto; border-radius: 6px; border: 1px #BBB solid;'
         });
 
 
@@ -184,7 +184,7 @@
       }); //closing onclick function
 
       $('#priv' + target + 'send').focus();
-  }  //closing create box function
+  };  //closing create box function
 
   //front-end JavaSCript - closes a chat box
   function closeChatBox(target, boxID) {
@@ -201,7 +201,6 @@
     $('#data').keypress(function(e) {
 
       if(e.which == 13) {
-      $(this).blur();
 
       //take in message as variable
       var message = $('#data').val();
